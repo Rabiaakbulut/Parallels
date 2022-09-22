@@ -1,0 +1,86 @@
+
+"ABAP'ta array yok. Onun için arraye benzer bir tip oluşturdum.
+TYPES: BEGIN OF gty_coordinate,
+  x TYPE i,
+  y TYPE i,
+  END OF gty_coordinate.
+
+DATA: gt_array     TYPE TABLE OF gty_coordinate, "array tablosu
+      gt_array2    TYPE TABLE OF gty_coordinate,
+      gt_array3    TYPE TABLE OF gty_coordinate,
+      gs_array     TYPE          gty_coordinate,
+      gv_x_paralel TYPE i,                       "x'e  paralel doğru sayısı
+      gv_y_paralel TYPE i,                       "y'ye paralel doğru sayısı
+      gv_row_count TYPE i,                       "array tablosu eleman sayısı
+      gv_index     TYPE i VALUE 1,
+      gv_index2    TYPE i VALUE 2.
+
+"soruda verilen elemanları tabloya ekleyelim
+gs_array-x = 1.  gs_array-y = 2.  APPEND gs_array TO gt_array.
+gs_array-x = 3.  gs_array-y = 7.  APPEND gs_array TO gt_array.
+gs_array-x = 0.  gs_array-y = 6.  APPEND gs_array TO gt_array.
+gs_array-x = 1.  gs_array-y = 1.  APPEND gs_array TO gt_array.
+gs_array-x = -5. gs_array-y = 2.  APPEND gs_array TO gt_array.
+gs_array-x = 1.  gs_array-y = 5.  APPEND gs_array TO gt_array.
+gs_array-x = 3.  gs_array-y = -5. APPEND gs_array TO gt_array.
+
+gt_array2 = gt_array. gt_array3 = gt_array. "orijinal tabloyu kopyala
+
+gv_row_count = lines( gt_array ).
+
+"X'e paralel olanlar (y'leri aynı olanlar)
+DO.
+  IF gt_array2[ gv_index ]-y EQ gt_array2[ gv_index2 ]-y.
+    gv_x_paralel = gv_x_paralel + 1.
+    DELETE gt_array2 WHERE y EQ gt_array2[ gv_index2 ]-y.
+    IF sy-subrc EQ 0.
+      gv_index2 = 1.
+      gv_index = 1.
+    ENDIF.
+  ENDIF.
+  gv_row_count = lines( gt_array2 ).
+  IF gv_row_count EQ 0 OR gv_row_count EQ 1. "tabloda eleman kalmadıysa veya tek eleman kaldıysa çık
+    EXIT.
+  ENDIF.
+  IF gv_index2 EQ gv_row_count.
+    IF gv_index EQ gv_row_count - 1.  "sondan bir önceki elemanla sondaki elemanı karşılaştırıyorsa
+      EXIT.                           "başka karşılaştıracak bir şey kalmamıştır, exit
+    ELSE.
+      gv_index = gv_index + 1.        "bir sonraki döngüye geç
+      gv_index2 = gv_index + 1.
+    ENDIF.
+  ELSE.
+    gv_index2 = gv_index2 + 1.        "aynı elemanı altındakilerle karşılaştırmaya devam et
+  ENDIF.
+ENDDO.
+
+gv_index = 1.
+gv_index2 = 2.
+
+"Y'ye paralel olanlar (x'leri aynı olanlar)
+DO.
+  IF gt_array3[ gv_index ]-x EQ gt_array3[ gv_index2 ]-x.
+    gv_y_paralel = gv_y_paralel + 1.
+    DELETE gt_array3 WHERE x EQ gt_array3[ gv_index2 ]-x.
+    IF sy-subrc EQ 0.
+      gv_index2 = 1.
+      gv_index = 1.
+    ENDIF.
+  ENDIF.
+  gv_row_count = lines( gt_array3 ).
+  IF gv_row_count EQ 0 OR gv_row_count EQ 1.
+    EXIT.
+  ENDIF.
+  IF gv_index2 EQ gv_row_count.
+    IF gv_index EQ gv_row_count - 1.
+      EXIT.
+    ELSE.
+      gv_index = gv_index + 1.
+      gv_index2 = gv_index + 1.
+    ENDIF.
+  ELSE.
+    gv_index2 = gv_index2 + 1.
+  ENDIF.
+ENDDO.
+
+WRITE : 'Paralel doğru sayısı -> x: ' ,gv_x_paralel, ' y: ', gv_y_paralel.
